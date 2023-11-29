@@ -46,6 +46,10 @@ export function HomeScreen() {
     href: '/params/tim',
   })
 
+  const todolistLink = useLink({
+    href: '/todolist',
+  })
+
   return (
     <ScrollView>
       <YStack flex={1} jc='center' ai='center' p='$4' space='$4'>
@@ -91,6 +95,9 @@ export function HomeScreen() {
           </Button>
           <Button {...paramsLink} space='$2'>
             Params
+          </Button>
+          <Button {...todolistLink} space='$2'>
+            Todo List
           </Button>
           <Button
             onPress={() => {
