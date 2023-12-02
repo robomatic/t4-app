@@ -1,9 +1,23 @@
 'use client'
 
+import {
+  Button,
+  Checkbox,
+  Form,
+  Input,
+  ScrollView,
+  XStack,
+  YStack,
+  Paragraph,
+  Separator,
+  H1
+} from '@t4/ui'
+import { Check } from '@tamagui/lucide-icons'
 import { SharedDocContext } from '../../provider/yjs/context'
 import { useArray } from '../../utils/y-hooks'
 import * as Y from 'yjs'
 import { useState } from 'react'
+
 
 export function TodolistScreen() {
   // Initialize our To Do List as an array.
@@ -31,19 +45,21 @@ export function TodolistScreen() {
   }
 
   return (
-    <div className='m-10'>
-      <div>To Do List</div>
-      <div className='space-y-1'>
+    <ScrollView className='m-10'>
+      <YStack flex={1} jc='center' ai='center' p='$4' space='$4'>
+      <H1>To Do List</H1>
+      <YStack gap="$4">
         <ToDoInput onCreateItem={pushItem} />
-        <button
-          onClick={clearCompletedItems}
+        <Button
+          onPress={clearCompletedItems}
           className='block rounded-md bg-blue-600 px-3.5 py-2.5 text-center text-sm hover:bg-blue-500'
         >
           Clear Completed
-        </button>
+        </Button>
         {items && items.map((item, index) => <ToDoItem key={index} item={item} />)}
-      </div>
-    </div>
+      </YStack>
+      </YStack>
+    </ScrollView>
   )
 }
 
@@ -60,21 +76,24 @@ export function ToDoItem({ item }: ToDoItemProps) {
   }
 
   return (
-    <div>
-      <label className='flex flex-row space-x-2 items-center'>
-        <input
-          type='checkbox'
+    <XStack alignItems="center" gap="$4">
+        <Checkbox
+          size="$6"
           className='w-6 h-6 cursor-pointer'
           checked={item.get('done')}
-          onChange={onCompleted}
-        />
-        <input
+          onPress={onCompleted}
+        >
+          <Checkbox.Indicator>
+            <Check />
+          </Checkbox.Indicator>
+        </Checkbox>
+        <Input
+          
           className='bg-transparent p-1 rounded text-lg'
           value={item.get('text')}
           onChange={(e) => item.set('text', e.target.value)}
         />
-      </label>
-    </div>
+    </XStack>
   )
 }
 
@@ -88,19 +107,21 @@ export function ToDoInput(props: { onCreateItem: (text: string) => void }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className='flex flex-row space-x-2 max-w-2xl'>
-      <input
-        type='text'
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        className='flex-1 block ring-black rounded-md border-0 px-3.5 py-2 text-gray-900 ring-1 ring-inset placeholder:text-gray-400'
-      />
-      <button
-        type='submit'
-        className='block rounded-md bg-blue-600 px-3.5 py-2.5 text-center text-sm hover:bg-blue-500'
-      >
-        Add
-      </button>
-    </form>
+    <Form onSubmit={onSubmit} className='flex flex-row space-x-2 max-w-2xl'>
+      <XStack gap="$4">
+        <Input
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          className='flex-1 block ring-black rounded-md border-0 px-3.5 py-2 text-gray-900 ring-1 ring-inset placeholder:text-gray-400'
+        />
+        <Form.Trigger asChild>
+          <Button
+            className='block rounded-md bg-blue-600 px-3.5 py-2.5 text-center text-sm hover:bg-blue-500'
+          >
+            Add
+          </Button>
+        </Form.Trigger>
+      </XStack>
+    </Form>
   )
 }
