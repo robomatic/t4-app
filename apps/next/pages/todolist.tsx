@@ -1,3 +1,5 @@
+'use client'
+
 import { TodolistScreen } from 'app/features/todolist/screen'
 import Head from 'next/head'
 

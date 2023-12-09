@@ -1,49 +1,18 @@
-'use client'
-
+import 'client-only'
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import type { DocContext, NetworkProviderContext } from './app-context'
+import { useInternalDoc, useNetworkProvider } from 'app/atoms/lofi-store'
 import type { Awareness } from 'y-protocols/awareness'
 import * as Y from 'yjs'
-import { WebrtcProvider } from 'y-webrtc'
 
 type YDoc = Y.Doc
-
-/**
- * React hook to get the Y.Doc instance from the current context.
- *
- * @returns The Y.Doc instance.
- */
-export function useYDoc(context: DocContext): YDoc {
-  const ctx = useContext(context)
-  if (!ctx) {
-    throw new Error('Yjs hooks must be used within a YDocProvider')
-  }
-  return ctx
-}
-
-/**
- * React hook for obtaining the Network Provider instance from the current context.
- *
- * This is useful for integrating components that expect a direct reference
- * to the provider.
- *
- * @returns The NetworkProvider instance.
- */
-export function useNetworkProvider(context: NetworkProviderContext): WebrtcProvider {
-  const ctx = useContext(context)
-  if (!ctx) {
-    throw new Error('Yjs hooks must be used within a YDocProvider')
-  }
-  return ctx
-}
 
 /**
  * React hook for obtaining the Yjs Awareness instance from the current context.
  *
  * @returns The Yjs Awareness instance for the current document.
  */
-export function useAwareness(context: NetworkProviderContext): Awareness {
-  const ctx = useContext(context)
+export function useAwareness(): Awareness {
+  const [ctx] = useNetworkProvider()
   if (!ctx) {
     throw new Error('Yjs hooks must be used within a YDocProvider')
   }
@@ -55,10 +24,8 @@ export function useAwareness(context: NetworkProviderContext): Awareness {
  *
  * @returns A setter function for the local presence object.
  */
-export function usePresenceSetter<T extends Record<string, any>>(
-  context: NetworkProviderContext
-): (presence: T) => void {
-  const awareness = useAwareness(context)
+export function usePresenceSetter<T extends Record<string, any>>(): (presence: T) => void {
+  const awareness = useAwareness()
 
   const setLocalPresence = useCallback(
     (localState: any) => {
@@ -73,15 +40,14 @@ export function usePresenceSetter<T extends Record<string, any>>(
 }
 
 type UsePresenceOptions = {
-  context: NetworkProviderContext
   includeSelf?: boolean
 }
 
 /** React hook that returns other users’ presence values as a `Map<number, any>`. */
 export function usePresence<T extends Record<string, any>>(
-  options: UsePresenceOptions
+  options?: UsePresenceOptions
 ): Map<number, T> {
-  const awareness = useAwareness(options.context)
+  const awareness = useAwareness()
   const [presence, setPresence] = useState<Map<number, T>>(new Map())
 
   const includeSelf = options?.includeSelf || false
@@ -112,10 +78,7 @@ export function usePresence<T extends Record<string, any>>(
 
 function useRedraw() {
   const [_, setRedraw] = useState(0)
-  return useCallback(() => {
-    console.log('redraw')
-    setRedraw((x) => x + 1), [setRedraw]
-  })
+  return useCallback(() => setRedraw((x) => x + 1), [setRedraw])
 }
 
 /** Represents possible values to pass to hooks that return Yjs objects,
@@ -155,10 +118,14 @@ export type ObjectOptions = {
  */
 export function useMap<T>(
   name: string,
-  context: DocContext,
+  yDoc?: YDoc | undefined,
   objectOptions?: ObjectOptions
 ): Y.Map<T> {
-  const doc = useYDoc(context)
+  let doc = yDoc
+  if (!doc) {
+    const [iDoc] = useInternalDoc()
+    doc = iDoc
+  }
   const map = useMemo(() => doc.getMap<T>(name), [doc, name])
   useObserve(map, objectOptions?.observe || 'deep')
 
@@ -183,10 +150,14 @@ export function useMap<T>(
  */
 export function useArray<T>(
   name: string,
-  context: DocContext,
+  yDoc: YDoc | undefined,
   objectOptions?: ObjectOptions
 ): Y.Array<T> {
-  const doc = useYDoc(context)
+  let doc = yDoc
+  if (!doc) {
+    const [iDoc] = useInternalDoc()
+    doc = iDoc
+  }
   const array = useMemo(() => doc.getArray<T>(name), [doc, name])
   useObserve(array, objectOptions?.observe || 'deep')
 
@@ -208,8 +179,16 @@ export function useArray<T>(
  * @param objectOptions
  * @returns
  */
-export function useText(name: string, context: DocContext, observerKind?: ObjectOptions): Y.Text {
-  const doc = useYDoc(context)
+export function useText(
+  name: string,
+  yDoc: YDoc | undefined,
+  observerKind?: ObjectOptions
+): Y.Text {
+  let doc = yDoc
+  if (!doc) {
+    const [iDoc] = useInternalDoc()
+    doc = iDoc
+  }
   const text = useMemo(() => doc.getText(name), [doc, name])
   useObserve(text, observerKind?.observe || 'deep')
 
